@@ -1,0 +1,73 @@
+import json
+from collections import defaultdict
+from datetime import datetime
+
+# Шаг 1: Загрузка данных из файла
+with open("orders_july_2023.json", "r", encoding="utf-8") as file:
+    orders = json.load(file)
+
+# Шаг 2: Инициализация переменных
+max_price = 0
+max_order = ''
+max_quantity = 0
+max_quantity_order = ''
+order_count_per_day = defaultdict(int)
+user_order_count = defaultdict(int)
+user_total_price = defaultdict(float)
+
+# Шаг 3: Обработка данных
+total_price_sum = 0
+total_quantity_sum = 0
+
+for order_num, order_data in orders.items():
+    # Извлечение данных о заказе
+    price = order_data['price']
+    quantity = order_data['quantity']
+    date = order_data['date']
+    user_id = order_data['user_id']
+    
+    # 1. Номер самого дорогого заказа
+    if price > max_price:
+        max_price = price
+        max_order = order_num
+
+    # 2. Номер заказа с самым большим количеством товаров
+    if quantity > max_quantity:
+        max_quantity = quantity
+        max_quantity_order = order_num
+
+    # 3. Подсчет заказов по дням
+    order_date = datetime.strptime(date, '%Y-%m-%d').date()
+    order_count_per_day[order_date] += 1
+
+    # 4. Подсчет количества заказов по пользователям
+    user_order_count[user_id] += 1
+
+    # 5. Подсчет суммарной стоимости заказов по пользователям
+    user_total_price[user_id] += price
+    
+    # Общая стоимость и количество для средних расчетов
+    total_price_sum += price
+    total_quantity_sum += quantity
+
+# Шаг 4: Поиск дня с максимальным количеством заказов
+max_orders_day = max(order_count_per_day, key=order_count_per_day.get)
+
+# Шаг 5: Поиск пользователя с максимальным количеством заказов
+max_orders_user = max(user_order_count, key=user_order_count.get)
+
+# Шаг 6: Поиск пользователя с максимальной суммарной стоимостью заказов
+max_spent_user = max(user_total_price, key=user_total_price.get)
+
+# Шаг 7: Средние значения
+average_order_price = total_price_sum / len(orders) if orders else 0
+average_price_per_item = total_price_sum / total_quantity_sum if total_quantity_sum > 0 else 0
+
+# Шаг 8: Вывод результатов
+print(f'Номер заказа с самой большой стоимостью: {max_order}, стоимость заказа: {max_price}')
+print(f'Номер заказа с самым большим количеством товаров: {max_quantity_order}, количество товаров: {max_quantity}')
+print(f'День с максимальным количеством заказов: {max_orders_day}')
+print(f'Пользователь с самым большим количеством заказов: {max_orders_user}')
+print(f'Пользователь с самой большой суммарной стоимостью заказов: {max_spent_user}')
+print(f'Средняя стоимость заказа: {average_order_price:.2f}')
+print(f'Средняя стоимость товара: {average_price_per_item:.2f}')
